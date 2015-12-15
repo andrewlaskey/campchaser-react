@@ -1,0 +1,18 @@
+// COLORS
+//////////////////////
+
+$light: #EEE;
+$dark: #403F3F;
+
+$red: #EB586F;
+
+$primary-color: #60BEB3;
+$secondary-color: lighten($primary-color, 10%);
+
+$body-background: $light;
+$body-color: $dark;
+
+$link-color: $primary-color;
+$link-hover: $secondary-color;
+
+$like-color: $red;
