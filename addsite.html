@@ -22,6 +22,9 @@
 				<input id="image"type="text" />
 			</div>
 			<div>
+				<label for="tags">Tags</label>
+				<input id="tags" name="tags" type="text" />
+			<div>
 				<label for="lat">Latitude</label>
 				<input id="lat"type="text" />
 			</div>
@@ -39,7 +42,8 @@
 			var firebaseUrl = 'https://campchasertest.firebaseio.com';
 
 			var sitesRef = new Firebase(firebaseUrl + '/sites'),
-				userRef = new Firebase(firebaseUrl + '/users/admin');
+				userRef = new Firebase(firebaseUrl + '/users/admin'),
+				tagsRef = new Firebase(firebaseUrl + '/tags');
 
 			document.getElementById("addSite").addEventListener("submit", function(e){
 		        e.preventDefault();
@@ -48,7 +52,10 @@
 		        	comment = document.getElementById('comment').value,
 		        	imageUrl = document.getElementById('image').value,
 		        	lat = document.getElementById('lat').value,
-		        	longitude = document.getElementById('long').value;
+		        	longitude = document.getElementById('long').value,
+		        	tags = document.getElementById('tags').value;
+
+		        var tagsArr = tags.split(',');
 
 		        var newSite = {
 		        	title: title,
@@ -66,6 +73,12 @@
 		        var newSiteRef = sitesRef.push(newSite);
 
 		        userRef.child('/sites/' + newSiteRef.key()).set(true);
+
+		        tagsArr.forEach(function (el) {
+		        	var key = el.split(' ').join('-');
+		        	tagsRef.child(key + '/sites/' + newSiteRef.key()).set(true);
+		        	newSiteRef.child('/tags/' + key).set(true);
+		        });
 			});
 		</script>
 	</body>
