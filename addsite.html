@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+		<title>CampChaser</title>
+		<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+		<link rel="stylesheet" type="text/css" href="css/style.css">
+	</head>
+	<body>
+		<form id="addSite">
+			<div>
+				<label for="title">Title</label>
+				<input id="title" name="title" type="text" />
+			</div>
+			<div>
+				<label for="comment">Comment</label>
+				<textarea id="comment" name="comment"></textarea>
+			</div>
+			<div>
+				<label for="image">Image Url</label>
+				<input id="image"type="text" />
+			</div>
+			<div>
+				<label for="lat">Latitude</label>
+				<input id="lat"type="text" />
+			</div>
+			<div>
+				<label for="long">Longitude</label>
+				<input id="long"type="text" />
+			</div>
+			<button type="submit">Add Site</button>
+		</form>
+
+		<!-- Firebase -->
+		<script src="https://cdn.firebase.com/js/client/2.3.1/firebase.js"></script>
+		<script type="text/javascript">
+
+			var firebaseUrl = 'https://campchasertest.firebaseio.com';
+
+			var sitesRef = new Firebase(firebaseUrl + '/sites'),
+				userRef = new Firebase(firebaseUrl + '/users/admin');
+
+			document.getElementById("addSite").addEventListener("submit", function(e){
+		        e.preventDefault();
+
+		        var title = document.getElementById('title').value,
+		        	comment = document.getElementById('comment').value,
+		        	imageUrl = document.getElementById('image').value,
+		        	lat = document.getElementById('lat').value,
+		        	longitude = document.getElementById('long').value;
+
+		        var newSite = {
+		        	title: title,
+		        	comment: comment,
+		        	imageUrl: imageUrl,
+		        	likes: 0,
+		        	user: 'admin',
+		        	approved: true,
+		        	location: {
+		        		lat: parseFloat(lat),
+		        		long: parseFloat(longitude)
+		        	}
+		        };
+
+		        var newSiteRef = sitesRef.push(newSite);
+
+		        userRef.child('/sites/' + newSiteRef.key()).set(true);
+			});
+		</script>
+	</body>
+</html>

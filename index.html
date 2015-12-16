@@ -62,7 +62,9 @@
 
 							item['localLiked'] = localStorage.getItem(key) ? true : false;
 
-					        items.push(item);
+							if (item.approved === true) {
+						        items.push(item);
+						    }
 						});
 
 						items.reverse();
