@@ -46,7 +46,7 @@
 						<li className="site">
 							<img src={ this.props.site.imageUrl } alt={ this.props.site.title } />
 							<h3 className="site-title">{ this.props.site.title }</h3>
-							<p><small>Added by <span>{ this.props.site.user }</span></small></p>
+							<p><small>Added by <Link to={"/user/" + this.props.site.user }>{ this.props.site.user }</Link></small></p>
 							<p>{ this.props.site.comment }</p>
 							<ul className="site-taglist">{ tags.map(tagMap) }</ul>
 							<button 
@@ -91,7 +91,7 @@
 						});
 					};
 
-					var addTagSitesToList = function (snapshot) {
+					var addChildSitesToList = function (snapshot) {
 						var _this = this;
 
 						this.setState({
@@ -129,9 +129,14 @@
 						this.firebaseRef.orderByChild("likes").limitToLast(20).on('value', addSitesToList.bind(this));	
 					}
 
+					if (this.props.type == 'user') {
+						this.firebaseRef = new Firebase(firebaseUrl + '/users/' + this.props.params.userId + '/sites');
+						this.firebaseRef.limitToLast(20).on('value', addChildSitesToList.bind(this));	
+					}
+
 					if (this.props.type == 'tag') {
 						this.firebaseRef = new Firebase(firebaseUrl + '/tags/' + this.props.params.tagId + '/sites');
-						this.firebaseRef.limitToLast(20).on('value', addTagSitesToList.bind(this));	
+						this.firebaseRef.limitToLast(20).on('value', addChildSitesToList.bind(this));	
 					}
 					
 				},
@@ -186,6 +191,7 @@
 
 			var Popular = buildSiteList('popular');
 			var Recent = buildSiteList('recent');
+			var UserList = buildSiteList('user');
 			var TagList = buildSiteList('tag');
 
 			var App = React.createClass({
@@ -214,6 +220,7 @@
 						<IndexRoute component={Recent} />
 						<Route path="recent" component={Recent} />
 						<Route path="popular" component={Popular} />
+						<Route path="/user/:userId" component={UserList} />
 						<Route path="/tag/:tagId" component={TagList} />
 					</Route>
 				</Router>
