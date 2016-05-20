@@ -1,0 +1,23 @@
+{
+  "name": "campchaser-react",
+  "version": "1.0.0",
+  "description": "A site for viewing campsite images built with React and Firebase",
+  "main": "gulpfile.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/andrewlaskey/campchaser-react.git"
+  },
+  "keywords": [
+    "react",
+    "firebase"
+  ],
+  "author": "Andrew Laskey",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/andrewlaskey/campchaser-react/issues"
+  },
+  "homepage": "https://github.com/andrewlaskey/campchaser-react"
+}
