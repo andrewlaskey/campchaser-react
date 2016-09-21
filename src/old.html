@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+		<title>CampChaser</title>
+		<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+		<link rel="stylesheet" type="text/css" href="css/style.css">
+	</head>
+	<body>
+		<div class="wrap">
+			<div id="app"></div>
+		</div>
+
+		<!-- React JS -->
+		<script src="https://fb.me/react-0.13.3.js"></script>
+		<script src="https://fb.me/JSXTransformer-0.13.3.js"></script>
+
+		<script src="https://npmcdn.com/react-router/umd/ReactRouter.min.js"></script>
+
+		<!-- Firebase -->
+		<script src="https://cdn.firebase.com/js/client/2.3.1/firebase.js"></script>
+		<script type="text/jsx">
+
+			var firebaseUrl = 'https://campchasertest.firebaseio.com';
+
+			var SiteListItem = React.createClass({
+				render: function () {
+					var tags = [];
+
+					if (typeof this.props.site.tags === "object") {
+						tags = Object.keys(this.props.site.tags);
+					}
+
+					var tagMap = function (tag) {
+						var tagName = tag.split('-').join(' ');
+
+						return (
+							<li key={ tag }>
+								<Link to={ "/tag/" + tag }>{ tagName }</Link>
+							</li>
+						);
+					};
+
+					return (
+						<li className="site">
+							<img src={ this.props.site.imageUrl } alt={ this.props.site.title } />
+							<h3 className="site-title">{ this.props.site.title }</h3>
+							<p><small>Added by <Link to={"/user/" + this.props.site.user }>{ this.props.site.user }</Link></small></p>
+							<p>{ this.props.site.comment }</p>
+							<ul className="site-taglist">{ tags.map(tagMap) }</ul>
+							<button 
+								className={ this.props.site.localLiked ? 'liked' : '' }
+								onClick={ this.props.addLike.bind(null, this.props.site['.key']) }>
+								<i className="fa fa-heart"></i>{ this.props.site.likes > 0 ? ' ' + this.props.site.likes : ''  }
+							</button>
+						</li>
+					);
+				}
+			});
+
+			var SiteList = React.createClass({
+				getInitialState: function () {
+					return {
+						sites: []
+					}
+				},
+
+				componentWillMount: function () {
+					var addSitesToList = function(snapshot) {
+						var items = [];
+
+						snapshot.forEach(function(childSnapshot) {
+							var item = childSnapshot.val();
+
+							var key = childSnapshot.key();
+							
+							item['.key'] = key;
+
+							item['localLiked'] = localStorage.getItem(key) ? true : false;
+
+							if (item.approved === true) {
+						        items.push(item);
+						    }
+						});
+
+						items.reverse();
+
+						this.setState({
+							sites: items
+						});
+					};
+
+					var addChildSitesToList = function (snapshot) {
+						var _this = this;
+
+						this.setState({
+							sites: []
+						});
+
+						snapshot.forEach(function(childSnapshot) {
+							var ref = new Firebase(firebaseUrl + '/sites/' + childSnapshot.key());
+
+							ref.once('value', function(snap) {
+								var item = snap.val(),
+									key = snap.key();
+							
+								item['.key'] = key;
+
+								item['localLiked'] = localStorage.getItem(key) ? true : false;
+
+								if (item.approved === true) {
+									_this.setState(function(oldState) {
+										return oldState.sites.push(item);
+									});
+								}
+							});
+							
+						});
+					};
+
+					this.firebaseRef = new Firebase(firebaseUrl + '/sites');
+
+					if (this.props.type == 'recent') {
+						this.firebaseRef.limitToLast(20).on('value', addSitesToList.bind(this));	
+					}
+
+					if (this.props.type == 'popular') {
+						this.firebaseRef.orderByChild("likes").limitToLast(20).on('value', addSitesToList.bind(this));	
+					}
+
+					if (this.props.type == 'user') {
+						this.firebaseRef = new Firebase(firebaseUrl + '/users/' + this.props.params.userId + '/sites');
+						this.firebaseRef.limitToLast(20).on('value', addChildSitesToList.bind(this));	
+					}
+
+					if (this.props.type == 'tag') {
+						this.firebaseRef = new Firebase(firebaseUrl + '/tags/' + this.props.params.tagId + '/sites');
+						this.firebaseRef.limitToLast(20).on('value', addChildSitesToList.bind(this));	
+					}
+					
+				},
+
+				componentWillUnmount: function() {
+					this.firebaseRef.off();
+				},
+
+				toggleLike: function (key) {
+
+					siteLikesRef = this.firebaseRef.child(key + '/likes');
+					siteLikesRef.transaction(function (current_value) {
+						var likes = current_value || 0;
+
+						var localLiked = localStorage.getItem(key) ? true : false;
+
+						if (localLiked) {
+							likes--;
+							localStorage.removeItem(key);
+						} else {
+							likes++;
+							localStorage.setItem(key, true);
+						}
+						
+
+						return likes;
+					});
+				},
+
+				render: function () {
+					var _this = this;
+					var createSite = function (site, index) {
+						return (
+							<SiteListItem 
+								key={ index }
+								site={ site }
+								addLike={ _this.toggleLike }
+							/>
+						);
+					}
+					return <ul className="site-list">{ this.state.sites.map(createSite) }</ul>;
+				}
+			});
+
+			function buildSiteList (type) {
+				return React.createClass({
+					render: function () {
+						return (<SiteList {...this.props} type={type} />)
+					}
+				});
+			}
+
+			var Popular = buildSiteList('popular');
+			var Recent = buildSiteList('recent');
+			var UserList = buildSiteList('user');
+			var TagList = buildSiteList('tag');
+
+			var App = React.createClass({
+				render: function () {
+					return (
+						<div>
+							<h1 className="app-title">CampChaser</h1>
+							<ul className="nav">
+								<li><Link to="/recent" activeClassName="active">Recent</Link></li>
+								<li><Link to="/popular" activeClassName="active">Popular</Link></li>
+							</ul>
+							{ this.props.children }
+						</div>
+					);
+				}
+			});
+
+			var Router = window.ReactRouter.Router;
+			var Route = window.ReactRouter.Route;
+			var IndexRoute = window.ReactRouter.IndexRoute;
+			var Link = window.ReactRouter.Link;
+
+			React.render((
+				<Router>
+					<Route path="/" component={App}>
+						<IndexRoute component={Recent} />
+						<Route path="recent" component={Recent} />
+						<Route path="popular" component={Popular} />
+						<Route path="/user/:userId" component={UserList} />
+						<Route path="/tag/:tagId" component={TagList} />
+					</Route>
+				</Router>
+			), document.getElementById('app'));
+		</script>
+	</body>
+</html>

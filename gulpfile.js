@@ -4,12 +4,20 @@ var sass = require('gulp-sass');
 var cssnano = require('gulp-cssnano');
 var rename = require('gulp-rename');
 var autoprefixer = require('gulp-autoprefixer');
+var babelify = require('babelify');
+var browserify = require('browserify');
+var source = require('vinyl-source-stream');
 
 var path = {
   HTML: './src/*.html',
   SASS: './src/assets/sass/**/*',
+  JS: './src/assets/js/**/*.js',
+  JSX: './src/assets/js/**/*.jsx',
+  OUT: 'build.js',
   DEST: './dist',
-  DEST_CSS: './dist/assets/styles'
+  DEST_CSS: './dist/assets/styles',
+  DEST_JS: './dist/assets/js',
+  ENTRY_POINT: './src/assets/app.js'
 };
 
 gulp.task('browser-sync', function() {
@@ -37,11 +45,24 @@ gulp.task('sass', function(done) {
     .pipe(gulp.dest(path.DEST_CSS));
 });
 
-gulp.task('serve', ['copy','sass','browser-sync'], function () {
+gulp.task('js', function () {
+  return browserify({
+    entries: [path.ENTRY_POINT],
+    transform: [['babelify', {presets: ['es2015', 'react']}]],
+    require: ['react', 'react-dom', 'react-router'],
+    fullPaths: true,
+    debug: true
+  })
+  .bundle()
+  .pipe(source(path.OUT))
+  .pipe(gulp.dest(path.DEST_JS));
+})
+
+gulp.task('serve', ['copy','sass','js','browser-sync'], function () {
   return gulp.watch([
-    path.HTML, path.SASS
+    path.HTML, path.SASS, path.JS, path.JSX
   ],[
-    'copy', 'sass', browserSync.reload
+    'copy', 'sass', 'js', browserSync.reload
   ]);
 });
 
