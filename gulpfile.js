@@ -23,7 +23,7 @@ var path = {
 gulp.task('browser-sync', function() {
     browserSync.init({
         server: {
-            baseDir: "./"
+            baseDir: "./dist/"
         }
     });
 });
@@ -48,7 +48,7 @@ gulp.task('sass', function(done) {
 gulp.task('js', function () {
   return browserify({
     entries: [path.ENTRY_POINT],
-    transform: [['babelify', {presets: ['es2015', 'react']}]],
+    transform: [['babelify', {presets: ['es2015', 'stage-0', 'react']}]],
     require: ['react', 'react-dom', 'react-router'],
     fullPaths: true,
     debug: true
@@ -60,7 +60,7 @@ gulp.task('js', function () {
 
 gulp.task('serve', ['copy','sass','js','browser-sync'], function () {
   return gulp.watch([
-    path.HTML, path.SASS, path.JS, path.JSX
+    path.HTML, path.SASS, path.JS, path.JSX, path.ENTRY_POINT
   ],[
     'copy', 'sass', 'js', browserSync.reload
   ]);
